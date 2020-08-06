@@ -3,7 +3,7 @@ from librerias import *
 
 
 import mapas
-
+import collages
 import carga_datos as cargar
 import carga_vars as variables
 
@@ -43,12 +43,91 @@ window = 20
 
 #print(data.variables.keys())
 #for i,archivo in enumerate(archivos[1:]):
-for carpeta in [carpetas[1]]:
+for carpeta in [carpetas[3]]:
+
+
+    mLat = 240
+    mLon = 132
+
+
+
+    #Desarrollo compl-ndg
+    mLat = 236
+    mLon = 142
+
+    #splitting compl-ndg
+    SC1COMPLNDG_SPLITTING ={
+        'carpeta':'compl-ndg',
+        'mLat': 233,
+        'mLon': 183,
+        'ti': 41
+    }
+
+    #sc1 control
+    mLat = 160
+    mLon = 130 
+    ti = 12
+    
+    #CI compl-ndg
+    sc1ComplNdg = {
+        'carpeta':'compl-ndg',
+        'mLat': 253,
+        'mLon': 123,
+        'ti':35
+    }
+
+    #sc1 control
+    sc1Control = {
+        'carpeta':'control',
+        'mLat': 175,
+        'mLon' : 125,
+        'ti' : 20
+    }
+
+    #sc1 control-ndg
+    sc1ControlNdg ={
+        'carpeta':'control-ndg',
+        'mLat':180,
+        'mLon': 120,
+        'ti': 23
+    }
+
+    sc1ControlNdg ={
+        'carpeta':'control-ndg',
+        'mLat':203,
+        'mLon': 235,
+        'ti': 39
+    }
+
+
+    coords = sc1ControlNdg
+
+
+    show = True
+    save = False
+
+    lluviaPrev = False
+    z=False
+
+    qvmap =  False
+    conv = False
+    meso = True
+
+
+
+
+    carpeta = coords['carpeta']
+
+    if carpeta == 'control': 
+        carpeta = 'test01'
+        carpetaName = 'control'
+    else: carpetaName=carpeta
 
     print(carpeta)
 
     directorio = '/media/agustin/Linux/salidas_wrf/%s/'%carpeta
 
+    print(directorio)
     #archivos = !ls /media/agustin/Linux/salidas_wrf/control-ndg2/
 
     archivos = glob.glob(directorio+'wrf*')
@@ -73,10 +152,13 @@ for carpeta in [carpetas[1]]:
     #archivos = [archivos[3],archivos[2]]
     wMaxPrev = False
 
+    print(archivos)
+
     for archivo in [archivos[3]]:
 
         print(archivo)
 
+        
         data = cargar.dataNC(archivo)
 
         w = data.variables['W'][:,:,:,:]  
@@ -96,9 +178,9 @@ for carpeta in [carpetas[1]]:
 
         print(archivo)
 
-        print(data.variables.keys())
+        #print(data.variables.keys())
 
-        stride = 30
+        stride = 20
 
         #    i,mLat, mLon = wMaxTLL[0][0],wMaxTLL[1][0],wMaxTLL[2][0]
 
@@ -106,13 +188,15 @@ for carpeta in [carpetas[1]]:
 
         #for i,mLon,mLat  in zip(trackedTime,trackedLon,trackedLat):
 
-        mLat = 240
-        mLon = 135
+        ti = coords['ti']
+        mLat = coords['mLat']
+        mLon = coords['mLon']
 
-        for i in range(36,47,1):
+
+        for i in range(ti,46,1):
 
             lluviaPrev = False
-
+            
         
             #minCoords = funciones.buscarMin(wData[i,...],mLat,mLon,window,stride)
 
@@ -129,13 +213,13 @@ for carpeta in [carpetas[1]]:
             print(i,mLat,mLon)
 
             #Centrado en los máximos ascensos
-            mapas.convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,window,
-                                show=False,save=True,lluviaPrevia=lluviaPrev,
-                                llueve=True,carpeta=carpeta,wMaxPrev = wMaxPrev,nombre='ascensos',z=False)
+            collages.convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,window,
+                                show=show,save=save,lluviaPrevia=lluviaPrev,
+                                llueve=True,carpeta=carpetaName,wMaxPrev = wMaxPrev,nombre='ascensos',z=False)
 
             wMaxPrev = (i,mLat,mLon)
 
-            wMax.append(w[i,mLon,mLat])
+            wMax.append(w[i,window,window])
             #Centrado en los máximos descensos
             """
             mapas.convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLatMin,mLonMin,window,
@@ -143,5 +227,3 @@ for carpeta in [carpetas[1]]:
                         llueve=True,carpeta=carpeta,wMaxPrev = wMaxPrev,nombre = 'descensos',z=False)
             """
         
-        plt.plot(wMax)
-        plt.savefig ('./img/wMax.png')

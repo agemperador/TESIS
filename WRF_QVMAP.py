@@ -62,5 +62,5 @@ for carpeta in carpetas:
             cmapViento = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,10)
 
             mapas.qvapor(data,i,x,y,bm,lat,lon,topo,tiempos,
-                                show=False,save=True,lluviaPrevia=lluviaPrev,
+                                show=True,save=False,lluviaPrevia=lluviaPrev,
                                 llueve=True,carpeta=carpeta,nombre='qvapor',z=False,cmapViento=cmapViento)

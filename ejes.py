@@ -31,7 +31,8 @@ def verticalConvectivo(ax,x,y,w,u, corte = 'xz', window =False, ymin=0,ymax = 10
 
         titaE = np.ma.masked_array(titaE, y > topo )
 
-        ax.contour(x[:-40,:],y[:-40,:],titaE[:-40,:],colors= 'indigo', levels= 5)
+        ax.contour(x[:-40,:],y[:-40,:],titaE[:-40,:],colors= 'g', levels= 5)
+
 
     if type(topo) is not bool :
         
@@ -42,12 +43,16 @@ def verticalConvectivo(ax,x,y,w,u, corte = 'xz', window =False, ymin=0,ymax = 10
             print('No se puede graficar la topografìa')
 
     if viento:
-
+        u= np.ma.masked_array(u,y>topo)
+        w= np.ma.masked_array(w,y>topo)
         plots.pbarbs(ax,x,y,[u,w], cmap = 'k')
 
     plt.ylim((ymin,ymax))
 
     plt.colorbar(pm, use_gridspec = True)
+
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
 
     return 
 
@@ -55,6 +60,7 @@ def verticalEspecies(ax,x,y,q,w,cmap, corte = 'xz',ymin=0,ymax = 100, topo = Fal
 
     #for i in range(len(q)):
     #    plots.pcont(ax,x,y,q[i],color=cmaps[i])
+    if type(topo)!=bool: q = np.ma.masked_array(q,y>topo)
 
     pm = plots.pmesh(ax,x,y,q,cmap = cmap)
 
@@ -70,7 +76,7 @@ def verticalEspecies(ax,x,y,q,w,cmap, corte = 'xz',ymin=0,ymax = 100, topo = Fal
         cs =   ax.contour(x[:,:],y[:,:],tpot[:,:], levels = 0)
         plt.clabel(cs,inline=1, fmt='%1.0f')
 
-    plt.yticks([])
+    
     plt.xticks()
 
     if type(topo) is not bool:
@@ -129,7 +135,7 @@ def multiEspecies(ax,x,y,w,u,qv,qr,qc,qi,qg,qs, corte = 'xz', window =False, ymi
 
 def xy(ax,x,y,somb = False,r = False,bm = False,cmapSomb = 'BrBG',cont=False,u= False,v= False,topo = False, viento = True, 
 llueve = True,dot = False,linewidth=2,removeContour=[4,5],clevs=False,vmin = False,vmax = False,cmapViento=False,
-vminViento=False,vmaxViento = False):
+vminViento=False,vmaxViento = False,w=False,showLat=False):
 
     if type (somb)!=bool:
         pm = plots.pmesh(ax,x,y,somb,cmap=cmapSomb,vmin = vmin,vmax = vmax)
@@ -141,7 +147,6 @@ vminViento=False,vmaxViento = False):
         plots.streamplot(ax,x,y,u,v,linewidth=linewidth, cmapViento=cmapViento,vminViento=vminViento,vmaxViento=vmaxViento)
 
     if llueve:
-        print('rain',r.shape)
         pm = plots.pmesh(ax,x,y,r,cmap = 'gist_ncar',zorder = 12 ,vmin=0,vmax=50)
         #if r.shape[0]<300:
         #plt.colorbar(pm,use_gridspec =True,shrink=0.5, pad=0.04)
@@ -156,11 +161,16 @@ vminViento=False,vmaxViento = False):
     if type(dot)!=bool:
         plt.scatter(x[dot[1],dot[0]],y[dot[1],dot[0]],c='orange',zorder = 6)
        
-   
+    if type(w) != bool: 
+        w =  np.ma.masked_array(w,abs(w)<2)
+        plots.pcont(ax,x,y,w,color='r', cmap = 'seismic')
 
-    plt.yticks([])
-    plt.xticks([])
+    
+    if showLat ==False:
+        plt.yticks([])
+        plt.xticks([])
 
+  
 
 
 def hodografa(ax, u,v,press):
@@ -193,16 +203,25 @@ def hodografa(ax, u,v,press):
 
     ax.plot(u,v,color = 'k', linewidth = 2)
 
+    #Pasarlo a presion
     xy = range(ini,end)
+
+    plt.ylabel('V (m/s)')
+
+    plt.xlabel('U (m/s)')
+    
 
     hod = ax.scatter(u,v, c =xy, cmap = cm, zorder = 6 )
 
-    plt.colorbar(hod,use_gridspec=True)
+    cb =  plt.colorbar(hod, use_gridspec=True)
+
+    cb.ax.set_yticklabels(np.round(press))
+
+    cb.ax.set_ylabel('P (hPa)')
 
     ax.set_facecolor('white')
     ax.grid()
 
-    clevs_hod = np.round(press)
 
     plt.title('Hodografa')
 
@@ -221,6 +240,9 @@ def mesociclon (ax,x,y,u,v,div,topo=False):
     #plots.pcont(ax,x,y,press,color='r', especial='t')
 
     plots.streamplot(ax,x,y,u,v)
+
+    plt.yticks([])
+    plt.xticks([])
 
     
 def colorbar(vmin,vmax,cmap, orientation='horizontal', label=False):

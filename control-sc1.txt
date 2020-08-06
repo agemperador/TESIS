@@ -1,0 +1,3 @@
+SC1-control stride=20
+lat-ini lat-end time
+160 130 12

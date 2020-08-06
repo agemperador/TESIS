@@ -32,14 +32,14 @@ def streamplot(ax,x,y,u,v,linewidth=2,color='k',cmapViento=False,vminViento=Fals
 
 
     speed = np.sqrt((u*2) ** 2 + (v*2) ** 2)
-    lw = linewidth*speed / speed.max()
+    lw = 3*linewidth*speed / speed.max()
 
 
 
     if type(cmapViento)== bool:
-        s = ax.streamplot(x, y, u,v, color =color,linewidth=lw,zorder = 5)
+        s = ax.streamplot(x, y, u,v, color =color,linewidth=lw,zorder = 5, arrowsize = 1.2)
     else: 
-        s = ax.streamplot(x, y, u,v, color=speed,linewidth=lw,zorder = 5,cmap=cmapViento)
+        s = ax.streamplot(x, y, u,v, color=speed,linewidth=lw,zorder = 5,cmap=cmapViento, arrowsize=1.2)
 
     
 
@@ -47,11 +47,11 @@ def streamplot(ax,x,y,u,v,linewidth=2,color='k',cmapViento=False,vminViento=Fals
 
 
 
-def pcont(ax,x,y,var,color, completo = False,especial='',remove=[4,5],clevs=False,linewidth=1,zorder = 5):
+def pcont(ax,x,y,var,color, completo = False,especial='',remove=[4,5],clevs=False,linewidth=1,zorder = 5, cmap=False):
 
     m = np.max([abs(np.min(var)),abs(np.max(var))])
     try:
-        if especial=='':
+        if especial=='' and type (cmap)==bool:
 
             if completo == False:
 
@@ -66,6 +66,19 @@ def pcont(ax,x,y,var,color, completo = False,especial='',remove=[4,5],clevs=Fals
                 
                 cs = ax.contour(x,y,var,colors=color,linewidth=linewidth,zorder=zorder)
         
+        elif type (cmap)!=bool:
+            print('cmap')
+            if completo == False:
+
+                levels =  np.linspace(-m,m,5)
+                cs = ax.contour(x,y,var,levels = levels,cmap=cmap,linewidth=linewidth,zorder=zorder)
+
+                for i in remove:
+                    cs.collections[i].remove()
+
+            else: 
+                
+                cs = ax.contour(x,y,var,cmap=cmap,linewidth=linewidth,zorder=zorder)
 
 
         elif especial=='t':

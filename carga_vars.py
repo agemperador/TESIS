@@ -210,6 +210,6 @@ def getVort(u,v):
     [dqu_dx, dqu_dy] = np.gradient(u)
     [dqv_dx, dqv_dy] = np.gradient(v)
 
-    div = dqu_dy-dqv_dx
+    div =dqv_dx- dqu_dy
 
     return  div

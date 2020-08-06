@@ -8,142 +8,81 @@ import ejes
 
 # Añadir titae , mesociclon
 
-def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
-                window = False,show=True,save= False, lluviaPrevia = False, 
-                llueve=False, carpeta='',wMaxPrev=False, nombre= '', z =False):
-
-    window = 15
-
-    lluvia         = variables.lluvia(data,i,lluvia_prev=lluviaPrevia)
-
-    if z:
-
-        z = variables.z(data,tiempo=i)
-
-        pmin = 0
-        pmax = 14000
-
-        press = z
-
-    else:    
-        press = variables.press(data,i)
-        press = press/100
-        pmin = 1000
-        pmax = 100 
 
 
-    w,u,v  = carga.varIndNC(data,'W',tiempo=i,lev=[1,-1]),carga.varIndNC(data,'U',tiempo=i),carga.varIndNC(data,'V',tiempo=i)
+
+def convectivo(fig,lat,lon,press,mLat,mLon,window,u,w,tPot,titaE,topo,pmin,pmax,corte='xz',gspec = None):
+    ax = fig.add_subplot(gspec)
+
+    if corte == 'yz': l = lat
+    else: l = lon
+
+    x2D,y2D   = variables.getXY(l,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
+
+    wi    = variables.setData3D(w, mLat, mLon, corte, window)
+    ui    = variables.setData3D(u, mLat, mLon, corte, window)
+    tPoti  = variables.setData3D(tPot,mLat, mLon, corte, window)
+
+    titaEi = variables.setData3D(titaE,mLat,mLon,corte,window)
     
-    qc,qv,qi= carga.varIndNC(data,'QCLOUD',tiempo=i),carga.varIndNC(data,'QVAPOR',tiempo=i),carga.varIndNC(data,'QICE',tiempo=i)
-    qs =carga.varIndNC(data,'QSNOW',tiempo=i)
-    qg =carga.varIndNC(data,'QGRAUP',tiempo=i)
-    qr =carga.varIndNC(data,'QRAIN',tiempo=i)
+    topoi = variables.setData2D(topo,mLat = mLat,mLon = mLon,corte= corte,window=window)
 
-    tPot = carga.varIndNC(data,'T',tiempo=i)
-    tPot = variables.setTpotToT(tPot,press)
+    ejes.verticalConvectivo(ax,x2D,y2D,wi,ui,corte,ymin=pmin,ymax=pmax,topo =topoi,viento=True, tpot = tPoti,titaE=titaEi)
 
-    titaE = carga.varIndNC(data,'THM',tiempo=i)
-    
-    titaE  = np.ma.masked_array(titaE,press<750)
-    
-
-
-
-    pmin = 1000
-    pmax = 100
-
-    fig = plt.figure(figsize=(20,10))
-
-    gspec = fig.add_gridspec(6,10)
-
-    def convectivo(ax,corte='xz'):
-        if corte == 'yz': l = lat
-        else: l = lon
-
-        x2D,y2D   = variables.getXY(l,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
-
-        wi    = variables.setData3D(w, mLat, mLon, corte, window)
-        ui    = variables.setData3D(u, mLat, mLon, corte, window)
-        tPoti  = variables.setData3D(tPot,mLat, mLon, corte, window)
-
-        titaEi = variables.setData3D(titaE,mLat,mLon,corte,window)
-        
-        topoi = variables.setData2D(topo,mLat = mLat,mLon = mLon,corte= corte,window=window)
-
-        ejes.verticalConvectivo(ax,x2D,y2D,wi,ui,corte,ymin=pmin,ymax=pmax,topo =topoi,viento=True, tpot = tPoti,titaE=titaEi)
-
-    #caxW = plt.axes([2/5, 1/3+0.05, 0.005, 2/3-0.1])
-    #cbarW = fig.colorbar(wPlot, ax = ax, cax = caxW ,orientation = 'vertical')
-    #cbar.ax.set_yticklabels([vminr,10,20,30,40,vmaxr])
-    #Defino los limites del gráfico
-    #ra.set_clim(0, 40)
-    #cbar.draw_all()
-    #cbarW.ax.set_ylabel('W', labelpad = -70 , fontsize = 12)
-
-    ax = fig.add_subplot(gspec[0:2,0:4])
-    corte = 'xz'
-
-    convectivo(ax,corte)
-
-
-    ax = fig.add_subplot(gspec[2:4,0:4])
-    corte = 'yz'
-
-    convectivo(ax,corte)
-
-    position = [[0,4],[0,6],[0,8],[1,4],[1,6],[1,8]]
-
-    def especies(corte,vpos):
-        q = []
-        q.append(variables.setData3D(qv, mLat, mLon, corte, window))
-        q.append(variables.setData3D(qc, mLat, mLon, corte, window))
-        q.append(variables.setData3D(qi, mLat, mLon, corte, window))
-        q.append(variables.setData3D(qr, mLat, mLon, corte, window))
-        q.append(variables.setData3D(qs, mLat, mLon, corte, window))
-        q.append(variables.setData3D(qg, mLat, mLon, corte, window))
-
-        tPoti  = variables.setData3D(tPot,mLat, mLon, corte, window)
-
-
-        cmaps = ['Purples','Blues','Greys','Greens','Reds','RdPu']
-        q_names = ['QV','QC','QI','QR','QS','QG']
-
-        x2D,y2D   = variables.getXY(lon,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
-
-        topoi = variables.setData2D(topo,mLat = mLat,mLon = mLon,corte= corte,window=window)
+#caxW = plt.axes([2/5, 1/3+0.05, 0.005, 2/3-0.1])
+#cbarW = fig.colorbar(wPlot, ax = ax, cax = caxW ,orientation = 'vertical')
+#cbar.ax.set_yticklabels([vminr,10,20,30,40,vmaxr])
+#Defino los limites del gráfico
+#ra.set_clim(0, 40)
+#cbar.draw_all()
+#cbarW.ax.set_ylabel('W', labelpad = -70 , fontsize = 12)
 
 
 
-        wi = variables.setData3D(w, mLat, mLon, corte, window)
-    
+def especies(fig,gspec,lon,lat,position,mLat,mLon,press,topo,w,qv,qc,qi,qr,qs,qg,tPot,corte,vpos,window,pmin,pmax):
+    q = []
+    print(corte)
+    q.append(variables.setData3D(qv, mLat, mLon, corte, window))
+    q.append(variables.setData3D(qc, mLat, mLon, corte, window))
+    q.append(variables.setData3D(qi, mLat, mLon, corte, window))
+    q.append(variables.setData3D(qr, mLat, mLon, corte, window))
+    q.append(variables.setData3D(qs, mLat, mLon, corte, window))
+    q.append(variables.setData3D(qg, mLat, mLon, corte, window))
 
-        axEsp1 = []
-
-        for j in range(len(q)):
-
-        
-            axEsp1.append(fig.add_subplot(gspec[position[j][0]+vpos,position[j][1]:position[j][1]+2]))
-
-            ejes.verticalEspecies(axEsp1[j],x2D,y2D,q[j],wi,cmaps[j],ymin=pmin,ymax=pmax,topo =topoi,viento=True,tpot=tPoti)
-
-            plt.title(q_names[j])
-        
+    tPoti  = variables.setData3D(tPot,mLat, mLon, corte, window)
 
 
-    corte = 'xz'
-    window = 15
+    cmaps = ['Purples','Blues','Greys','Greens','Reds','RdPu']
+    q_names = ['QV','QC','QI','QR','QS','QG']
 
-    especies(corte,0)
+    if corte =='xz': l = lon
+    elif corte =='yz': l = lat
+
+    x2D,y2D   = variables.getXY(l,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
+
+    topoi = variables.setData2D(topo,mLat = mLat,mLon = mLon,corte= corte,window=window)
+
+
+
+    wi = variables.setData3D(w, mLat, mLon, corte, window)
+
+
+    axEsp1 = []
+
+    for j in range(len(q)):
 
     
-    corte = 'yz'
-    window = 15
+        axEsp1.append(fig.add_subplot(gspec[position[j][0]+vpos,position[j][1]:position[j][1]+2]))
+
+        ejes.verticalEspecies(axEsp1[j],x2D,y2D,q[j],wi,cmaps[j],ymin=pmin,ymax=pmax,topo =topoi,viento=True,tpot=tPoti)
+
+        plt.title(q_names[j])
+    
 
 
-    especies(corte,2)
 
-    window = 30
 
+def xyCentrado (fig,x,y,mLat,mLon,bm,window,topo,qv,lluvia,u,v,w,gspec,showLat=False):
     xi = variables.setXY(x,mLat,mLon,window)
     yi = variables.setXY(y,mLat,mLon,window)
     qvi = variables.setXY(qv[0,...] ,mLat,mLon,window)
@@ -153,32 +92,42 @@ def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
 
     ui  = variables.setXY(u[1,...],mLat,mLon,window)
     vi  = variables.setXY(v[1,...],mLat,mLon,window)
+    wi  = variables.setXY(w[18,...],mLat,mLon,window)
 
     topoi = variables.setXY(topo,mLat,mLon,window)
 
-    ax = fig.add_subplot(gspec[4:,0:2])
+    ax = fig.add_subplot(gspec)
+
+    cdict = {
+    'blue': [(0,1,0.5),(0.4,0.5,0.4) , (1, 1, 1)],
+    'green': [(0,0,0.2),(0.4,0.2,0), (1, 0, 0)],
+    'red': [(0,0,0) ,(0.4,0,0.4), (1, 1, 1)]}
+    cmapViento = mpl.colors.LinearSegmentedColormap('my_colormap',cdict,10)
 
 
-    ejes.xy(ax,xi,yi,qvi,r,bm, u=ui,v=vi,topo = topoi,dot = False)
+    ejes.xy(ax,xi,yi,qvi,r,bm, u=ui,v=vi,topo = topoi,
+    dot = False,w=wi,showLat=showLat,clevs=True,vmin = 0.008,vmax = 0.022,cmapViento=cmapViento,vminViento=0,vmaxViento=60)
 
 
 
-    ax = fig.add_subplot(gspec[4:,2:4])
+def xyTotal(fig,x,y,bm,mLon,mLat,u,v,topo,lluvia,gspec):
+    ax = fig.add_subplot(gspec)
 
 
     ui  = variables.setXY(u[1,...],mLat,mLon)[:303,:303]
     vi  = variables.setXY(v[1,...],mLat,mLon)[:303,:303]
+
     x = x[:303,:303]
     y = y[:303,:303]
     topo = topo[:303,:303]
     lluvia = lluvia[:303,:303]
 
 
-    ejes.xy(ax,x,y,False,lluvia,bm, u=ui,v=vi,topo = topo,viento = True, dot = [mLon,mLat])
+    ejes.xy(ax,x,y,False,lluvia,bm, u=ui,v=vi,topo = topo,viento = True, dot = [mLon,mLat],)
 
 
-
-    ax = fig.add_subplot(gspec[4:,4:6])
+def mapaHodografa(fig,u,v,mLat,mLon,press,gspec):
+    ax = fig.add_subplot(gspec)
 
     ini = 8
     end = 28
@@ -196,13 +145,16 @@ def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
 
 
 
-    window = 15
 
-    corte = 'xz'
-    ax = fig.add_subplot(gspec[4:,6:8])
+def mapaMultiespecies(fig,lon,lat,press,mLat,mLon,corte,window,w,u,v,qv,qr,qi,qc,qs,qg,topo,pmin,pmax,gspec):
+
+    ax = fig.add_subplot(gspec)
+
+    if corte == 'xz': l = lon
+    elif corte == 'yz': l = lat
 
 
-    x2D,y2D   = variables.getXY(lon,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
+    x2D,y2D   = variables.getXY(l,press,mLat = mLat,mLon = mLon,corte = corte,window=window)
 
     wi    = variables.setData3D(w, mLat, mLon, corte, window)
     ui    = variables.setData3D(u, mLat, mLon, corte, window)
@@ -215,32 +167,38 @@ def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
     qsi   = variables.setData3D(qs,mLat,mLon,corte,window)
     qgi   = variables.setData3D(qg,mLat,mLon,corte,window)
 
-    
+
 
     div = variables.getVort(ui,vi)
 
     #tPoti  = variables.setData3D(tPot,mLat, mLon, corte, window)
-    
+
     topoi = variables.setData2D(topo,mLat = mLat,mLon = mLon,corte= corte,window=window)
 
 
     ejes.multiEspecies(ax,x2D,y2D,wi,ui,qvi,qri,qci,qii,qgi,qsi,corte,ymin=pmin,ymax=pmax,topo =topoi,viento=True, tpot = False,div=div)
-    
-    
-    """
-    div = variables.getVort(ui,vi)
-
-    #div = np.ma.masked_array(div,abs(div)<2)
-
-    div = np.ma.masked_array(div,abs(div)<4)
-
-    ejes.mesociclon(ax,xi,yi,ui,vi,div,topoi)"""
 
 
-    ax = fig.add_subplot(gspec[4:,8:])
+"""
+div = variables.getVort(ui,vi)
+
+#div = np.ma.masked_array(div,abs(div)<2)
+
+div = np.ma.masked_array(div,abs(div)<4)
+
+ejes.mesociclon(ax,xi,yi,ui,vi,div,topoi)"""
+
+def mapaMesociclon(fig,x,y,mLat,mLon,window,press,u,v,topo,wMaxPrev=False,z=False,gspec=[1,1]):
+
+    ax = fig.add_subplot(gspec)
+
+
 
     xi = variables.setXY(x,mLat,mLon,window)
     yi = variables.setXY(y,mLat,mLon,window)
+
+    topoi = variables.setXY(topo,mLat,mLon,window)
+
     if not z : 
         level500 = np.where(abs(press[:,mLat,mLon]-500 )==np.min(abs(press[:,mLat,mLon]-500)))[0][0]
 
@@ -258,8 +216,8 @@ def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
 
         print('WMAXPREV')
 
-        ui = ui - uRel
-        vi = vi - vRel 
+        ui = ui -  np.mean(ui) # - uRel
+        vi = vi -  np.mean(vi) # - vRel
 
     div = variables.getVort(ui,vi)
 
@@ -267,28 +225,11 @@ def convectivo(data,i,x,y,bm,lat,lon,topo,tiempos,mLat,mLon,
 
     div = np.ma.masked_array(div,abs(div)<4)
 
-
-
-
-
     ejes.mesociclon(ax,xi,yi,ui,vi,div,topoi)
-  
+
+    
 
 
-    try:
-        plt.title('w max %s %s %s'%(str(np.max(w)),carpeta,tiempos[i]))
-    except:
-        print(len(tiempos))
-
-    plt.tight_layout()
-
-    if show:
-        plt.show()
-
-    if save:
-        print(i,'Guardando en ./img/%s/especies/TRACK/final/%s_%s_wmax_%s'%(carpeta,nombre,tiempos[i],carpeta))
-        plt.savefig('./img/%s/especies/TRACK/final/%s_%s_%s.png'%(carpeta,carpeta,nombre,tiempos[i]))
-        plt.close()
 
 
 

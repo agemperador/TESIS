@@ -57,7 +57,6 @@ def varIndNC(data, var, tiempo = 0,lev = False,lat = False,lon=False):
                     variable = data.variables[var][:,lev[0]:lev[1],lat[0]:lat[1],lon[0]:lon[1]]
                 else: 
                     variable = data.variables[var][tiempo,lev[0]:lev[1],lat[0]:lat[1],lon[0]:lon[1]]
-                    print(variable.shape)
 
             elif len(data.variables[var].shape) == 3:
                 if tiempo == 'todo':
